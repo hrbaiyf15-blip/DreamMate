@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DreamMate AI</title>
+<style>
+:root{--bg:#0c1020;--panel:#171d32;--panel2:#202943;--text:#f5f6ff;--muted:#aab3ca;--pink:#ff6fae;--violet:#9b8cff;--line:#303a57}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% 0,#30234d 0,transparent 32%),var(--bg);color:var(--text);font-family:system-ui,sans-serif}
+header{padding:18px 5%;border-bottom:1px solid var(--line);background:#0c1020ee;position:sticky;top:0}.logo{font-size:23px;font-weight:800}.logo span{color:var(--pink)}
+main{max-width:1120px;margin:30px auto;padding:0 18px}.hero{text-align:center;margin:30px 0}.hero h1{font-size:clamp(28px,5vw,46px)}.hero em{font-style:normal;color:var(--pink)}.hero p,.info p{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}.portrait{height:220px;background:#252d47}.portrait img{width:100%;height:100%;object-fit:cover;object-position:center 30%}.info{padding:15px}.info h3{margin:5px 0}.info p{font-size:13px;min-height:38px;line-height:1.6}.tag{font-size:11px;color:#ffd4e7;background:#59334f;padding:4px 9px;border-radius:20px}
+button{border:0;border-radius:12px;padding:11px 16px;background:linear-gradient(90deg,var(--pink),var(--violet));color:#151329;font-weight:800}button:disabled{opacity:.6}.secondary{background:#303a57;color:white}
+#chat{display:none;margin-top:25px;background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden}.chathead{display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--panel2)}.chathead small{color:var(--muted)}
+.messages{height:340px;overflow:auto;padding:17px;display:flex;flex-direction:column;gap:12px}.msg{max-width:85%;padding:11px 14px;border-radius:15px;line-height:1.7;white-space:pre-wrap}.bot{background:#293451;align-self:flex-start}.user{background:#684d8c;align-self:flex-end}
+form{display:flex;gap:9px;padding:13px;border-top:1px solid var(--line)}input{min-width:0;flex:1;background:#0f1528;border:1px solid var(--line);border-radius:12px;padding:13px;color:white;font:inherit}
+.note{margin:22px 0;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;color:var(--muted);font-size:13px;line-height:1.8}footer{text-align:center;color:#77829e;padding:28px;font-size:12px}
+@media(max-width:520px){.portrait{height:205px}.messages{height:290px}form{padding:10px}}
+</style></head><body>
+<header><div class="logo">DreamMate <span>AI</span></div></header>
+<main><section class="hero"><h1>شخصيتك الخيالية، <em>وحكايتك تبدأ هنا</em></h1><p>اختَر شخصية بالغة وموقفاً قصصياً وابدأ المحادثة.</p></section>
+<section class="grid" id="characters"></section>
+<section id="chat"><div class="chathead"><div><strong id="chatName">الشخصية</strong><br><small id="chatScene"></small></div><button class="secondary" onclick="closeChat()">رجوع للشخصيات</button></div><div class="messages" id="messages"></div><form id="sendForm"><input id="messageInput" placeholder="اكتب رسالتك..." autocomplete="off" required><button id="sendButton">إرسال</button></form></section>
+<div class="note">الصور تجريبية من خدمة صور عامة وتحتاج اتصالاً بالإنترنت. المحادثات تتصل بخادم Gemini عبر Supabase.</div></main><footer>DreamMate AI · نسخة تجريبية قابلة للتطوير</footer>
+<script>
+const FUNCTION_URL='https://zsbnvbobxihzdyoamdva.supabase.co/functions/v1/swift-task';
+const characters=[
+{name:'ليان',scene:'عالقة في المصعد',tag:'موقف مفاجئ',img:'https://randomuser.me/api/portraits/women/44.jpg',personality:'ليان امرأة بالغة، مرحة وحنونة وعفوية. علقت مع المستخدم في مصعد توقف فجأة. تحب المزاح والحوار الطبيعي وتمثيل الأدوار القصصي باحترام ورضا متبادل.',greeting:'أوه! يبدو أن المصعد توقف بين الطوابق… 😅 هل أنت بخير؟'},
+{name:'سارة',scene:'في مقهى وقت المطر',tag:'رومانسية هادئة',img:'https://randomuser.me/api/portraits/women/68.jpg',personality:'سارة امرأة بالغة وهادئة وذكية ورومانسية. تلتقي بالمستخدم في مقهى أثناء المطر.',greeting:'يا لها من صدفة جميلة! المطر قوي بالخارج. تحب تشاركني طاولتي؟ ☕'},
+{name:'نور',scene:'تائهة في المطار',tag:'مغامرة',img:'https://randomuser.me/api/portraits/women/32.jpg',personality:'نور امرأة بالغة واجتماعية وجريئة ومرحة. أضاعت بوابة رحلتها في المطار وتطلب المساعدة.',greeting:'ممكن تساعدني؟ أعتقد أني ضيّعت بوابة رحلتي! 😄'},
+{name:'ميرا',scene:'باب الحمّام عالق',tag:'موقف كوميدي',img:'https://randomuser.me/api/portraits/women/21.jpg',personality:'ميرا امرأة بالغة ومرحة وسريعة البديهة. انغلق باب الحمّام عليها بالخطأ وتطلب المساعدة. المشهد كوميدي وغير جنسي.',greeting:'يا ساتر! الباب علق وما يفتح 😂 أكو أحد برّه؟'},
+{name:'جنى',scene:'جارتك الجديدة',tag:'تعارف',img:'https://randomuser.me/api/portraits/women/52.jpg',personality:'جنى امرأة بالغة وودودة ومستقلة، انتقلت حديثاً إلى الشقة المجاورة.',greeting:'مرحباً! أنا جنى، جارتك الجديدة. عندك دقيقة؟'},
+{name:'ريم',scene:'في المكتبة',tag:'ذكاء وفضول',img:'https://randomuser.me/api/portraits/women/25.jpg',personality:'ريم امرأة بالغة وقارئة وفضولية وذكية، تحب النقاش عن الكتب والخيال.',greeting:'أبحث عن رواية تستحق القراءة… عندك اقتراح؟ 📚'},
+{name:'تالا',scene:'رحلة تخييم',tag:'طبيعة ومغامرة',img:'https://randomuser.me/api/portraits/women/57.jpg',personality:'تالا امرأة بالغة وشجاعة ومحبة للطبيعة، تشارك المستخدم رحلة تخييم.',greeting:'وصلنا أخيراً لمكان التخييم! خلّينا نجهز المكان.'},
+{name:'دانا',scene:'تأخر القطار',tag:'لقاء عفوي',img:'https://randomuser.me/api/portraits/women/12.jpg',personality:'دانا امرأة بالغة ومرحة وصريحة، تنتظر القطار المتأخر بجانب المستخدم.',greeting:'واضح القطار ناوي يتأخر اليوم 😂 شلون نقضي هالوقت؟'}
+];
+let active=null,history=[];const grid=document.getElementById('characters');
+characters.forEach(c=>{const card=document.createElement('article');card.className='card';card.innerHTML=`<div class="portrait"><img src="${c.img}" alt="صورة ${c.name}" loading="lazy"></div><div class="info"><span class="tag">${c.tag}</span><h3>${c.name}</h3><p>${c.scene}</p><button type="button">ابدأ القصة</button></div>`;card.querySelector('button').onclick=()=>startChat(c);grid.appendChild(card);});
+function startChat(c){active=c;history=[{role:'assistant',content:c.greeting}];document.getElementById('chatName').textContent=c.name;document.getElementById('chatScene').textContent=c.scene;document.getElementById('messages').innerHTML='';grid.style.display='none';document.getElementById('chat').style.display='block';addMessage(c.greeting,'bot');document.getElementById('messageInput').focus();}
+function closeChat(){document.getElementById('chat').style.display='none';grid.style.display='grid';}
+function addMessage(t,k){const el=document.createElement('div');el.className='msg '+k;el.textContent=t;const box=document.getElementById('messages');box.appendChild(el);box.scrollTop=box.scrollHeight;}
+document.getElementById('sendForm').addEventListener('submit',async e=>{e.preventDefault();if(!active)return;const input=document.getElementById('messageInput'),value=input.value.trim();if(!value)return;addMessage(value,'user');history.push({role:'user',content:value});input.value='';const button=document.getElementById('sendButton');button.disabled=true;button.textContent='...';try{const response=await fetch(FUNCTION_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history,characterName:active.name,personality:active.personality+' المشهد الحالي: '+active.scene})});const data=await response.json();if(!response.ok||!data.reply)throw new Error(data.error||'تعذر الحصول على رد');history.push({role:'assistant',content:data.reply});addMessage(data.reply,'bot');}catch(err){addMessage('صار خطأ بالاتصال: '+err.message,'bot');}finally{button.disabled=false;button.textContent='إرسال';input.focus();}});
+</script></body></html>
