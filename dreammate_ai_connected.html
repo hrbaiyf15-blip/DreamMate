@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DreamMate AI</title>
+<style>
+:root{--bg:#0c1020;--panel:#171d32;--panel2:#202943;--text:#f5f6ff;--muted:#aab3ca;--pink:#ff6fae;--violet:#9b8cff;--line:#303a57}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% 0,#30234d 0,transparent 32%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;padding:18px 5%;border-bottom:1px solid var(--line);position:sticky;top:0;background:#0c1020eF;backdrop-filter:blur(12px);z-index:2}
+.logo{font-weight:800;font-size:23px;letter-spacing:.2px}.logo span{color:var(--pink)}.badge{font-size:12px;color:#d8d2ff;border:1px solid #6559a5;padding:6px 10px;border-radius:20px}
+main{max-width:1120px;margin:36px auto;padding:0 20px}.hero{text-align:center;margin:38px auto 34px}.hero h1{font-size:clamp(30px,5vw,48px);margin:0 0 12px}.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--pink),var(--violet));background-clip:text;color:transparent}.hero p{color:var(--muted);margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}.card{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;overflow:hidden;transition:.2s}.card:hover{transform:translateY(-4px);border-color:#8876df}
+.avatar{height:150px;display:grid;place-items:center;font-size:65px;background:linear-gradient(135deg,#46315e,#293a62)}.card:nth-child(2) .avatar{background:linear-gradient(135deg,#633b54,#303b66)}.card:nth-child(3) .avatar{background:linear-gradient(135deg,#28566a,#3e3769)}
+.info{padding:17px}.info h3{margin:0 0 6px}.info p{color:var(--muted);font-size:14px;min-height:40px;margin:0 0 15px}
+button{border:0;border-radius:12px;padding:11px 16px;background:linear-gradient(90deg,var(--pink),var(--violet));color:#151329;font-weight:800;cursor:pointer}button.secondary{background:#303a57;color:var(--text)}
+.note{margin:24px 0;padding:15px 18px;background:#171d32;border:1px solid var(--line);border-radius:14px;color:var(--muted);font-size:13px;line-height:1.8}
+#chat{display:none;margin-top:28px;background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.chathead{display:flex;justify-content:space-between;align-items:center;padding:15px 18px;background:var(--panel2)}.chathead small{color:var(--muted)}
+.messages{height:330px;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px}.msg{max-width:82%;padding:11px 14px;border-radius:15px;line-height:1.65}.bot{background:#293451;align-self:flex-start;border-bottom-left-radius:4px}.user{background:#684d8c;align-self:flex-end;border-bottom-right-radius:4px}
+form{display:flex;gap:10px;padding:14px;border-top:1px solid var(--line)}input{min-width:0;flex:1;background:#0f1528;border:1px solid var(--line);border-radius:12px;padding:13px;color:white;font:inherit}
+footer{text-align:center;color:#77829e;font-size:12px;padding:30px}
+@media(max-width:520px){header{padding:14px 4%}.logo{font-size:19px}.messages{height:280px}form{padding:10px}}
+</style>
+</head>
+<body>
+<header><div class="logo">DreamMate <span>AI</span></div><div class="badge">نسخة تجريبية · مجانية</div></header>
+<main>
+<section class="hero"><h1>شخصيتك الخيالية، <em>وحكايتك تبدأ هنا</em></h1><p>اختر شخصية وابدأ محادثة تجريبية — باللغة العربية.</p></section>
+<section class="grid" id="characters">
+<article class="card"><div class="avatar">🌙</div><div class="info"><h3>ليان</h3><p>مرحة وحنونة، تحب الموسيقى والحوارات الطويلة.</p><button onclick="startChat('ليان','أهلاً! سعيدة بالتعرف عليك. شنو تحب نحچي اليوم؟')">ابدأ المحادثة</button></div></article>
+<article class="card"><div class="avatar">🌹</div><div class="info"><h3>سارة</h3><p>هادئة وذكية، تحب القصص والخيال وتمثيل الأدوار.</p><button onclick="startChat('سارة','مرحباً! عندك فكرة لقصة نعيش أحداثها سوا؟')">ابدأ المحادثة</button></div></article>
+<article class="card"><div class="avatar">⚡</div><div class="info"><h3>آدم</h3><p>مغامر وواثق، يحب التحديات والألغاز.</p><button onclick="startChat('آدم','هلا! مستعد لتحدي أو مغامرة جديدة؟')">ابدأ المحادثة</button></div></article>
+</section>
+<section id="chat">
+<div class="chathead"><div><strong id="chatName">الشخصية</strong><br><small>محادثة مباشرة مع الذكاء الاصطناعي</small></div><button class="secondary" onclick="closeChat()">رجوع للشخصيات</button></div>
+<div class="messages" id="messages"></div>
+<form id="sendForm"><input id="messageInput" placeholder="اكتب رسالتك..." autocomplete="off" required><button>إرسال</button></form>
+</section>
+<div class="note"><strong>تنبيه:</strong> هذه نسخة أولية متصلة بخادم Gemini عبر Supabase. الاستخدام المجاني يخضع لحدود Google.</div>
+</main>
+<footer>DreamMate AI · نموذج أولي قابل للتطوير</footer>
+<script>
+const FUNCTION_URL = 'https://zsbnvbobxihzdyoamdva.supabase.co/functions/v1/swift-task';
+let active = '';
+let activeGreeting = '';
+let history = [];
+const personalities = {
+  'ليان': 'مرحة وحنونة، تحب الموسيقى والحوارات الطويلة. تتحدث بعفوية وبلهجة عربية ودودة.',
+  'سارة': 'هادئة وذكية، تحب القصص والخيال وتمثيل الأدوار. تتحدث بلطف وفضول.',
+  'آدم': 'مغامر وواثق، يحب التحديات والألغاز. يتحدث بحماس ووضوح.'
+};
+function startChat(name, greeting) {
+  active = name; activeGreeting = greeting;
+  history = [{role:'assistant', content:greeting}];
+  document.getElementById('chatName').textContent = name;
+  document.getElementById('messages').innerHTML = '';
+  document.getElementById('characters').style.display = 'none';
+  document.getElementById('chat').style.display = 'block';
+  addMessage(greeting, 'bot');
+  document.getElementById('messageInput').focus();
+}
+function closeChat() {
+  document.getElementById('chat').style.display = 'none';
+  document.getElementById('characters').style.display = 'grid';
+}
+function addMessage(text, kind) {
+  const el = document.createElement('div'); el.className = 'msg ' + kind; el.textContent = text;
+  const box = document.getElementById('messages'); box.appendChild(el); box.scrollTop = box.scrollHeight;
+}
+document.getElementById('sendForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const input = document.getElementById('messageInput');
+  const value = input.value.trim(); if (!value) return;
+  addMessage(value, 'user'); history.push({role:'user', content:value}); input.value = '';
+  const sendButton = e.submitter || document.querySelector('#sendForm button');
+  sendButton.disabled = true; sendButton.textContent = '...';
+  try {
+    const response = await fetch(FUNCTION_URL, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({messages:history, characterName:active, personality:personalities[active] || ''})
+    });
+    const data = await response.json();
+    if (!response.ok || !data.reply) throw new Error(data.error || 'تعذر الحصول على رد من الذكاء الاصطناعي');
+    history.push({role:'assistant', content:data.reply}); addMessage(data.reply, 'bot');
+  } catch (err) {
+    addMessage('صار خطأ بالاتصال: ' + err.message, 'bot');
+  } finally {
+    sendButton.disabled = false; sendButton.textContent = 'إرسال'; input.focus();
+  }
+});
+</script>
+</body></html>
